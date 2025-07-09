@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Indian Voter ID Card Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f1f1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .form-section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .form-group label {
+      flex: 1 1 45%;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+    }
+
+    canvas {
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-section">
+    <h2>Enter Voter ID Details</h2>
+    <div class="form-group">
+      <label>Name: <input type="text" id="name"></label>
+      <label>Father/Husband's Name: <input type="text" id="fhName"></label>
+      <label>Gender: 
+        <select id="gender">
+          <option value="Female">Female</option>
+          <option value="Male">Male</option>
+          <option value="Other">Other</option>
+        </select>
+      </label>
+      <label>Date of Birth: <input type="date" id="dob"></label>
+      <label>EPIC Number: <input type="text" id="epic"></label>
+      <label>Serial No: <input type="text" id="serial"></label>
+      <label>Constituency: <input type="text" id="constituency" value="100-Palakurthi"></label>
+      <label>Part No: <input type="text" id="part" value="72-Gollapally"></label>
+      <label>Polling Station Address: <input type="text" id="polling" value="M.P.P. Upper Primary School"></label>
+      <label>Photo Upload: <input type="file" id="photo" accept="image/*"></label>
+    </div>
+    <button onclick="generateCard()">Generate Voter ID</button>
+    <button onclick="downloadPDF()">Download PDF</button>
+  </div>
+
+  <canvas id="voterCanvas" width="1086" height="768"></canvas>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const canvas = document.getElementById('voterCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let bgImage = new Image();
+    bgImage.src = 'Rani voter IDZFY2454981_page-0001.jpg'; // Place your background image here
+    let uploadedPhoto = null;
+
+    document.getElementById('photo').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          uploadedPhoto = new Image();
+          uploadedPhoto.onload = () => {
+            drawTemplate();
+          };
+          uploadedPhoto.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function drawTemplate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+
+      const name = document.getElementById('name').value;
+      const fhName = document.getElementById('fhName').value;
+      const gender = document.getElementById('gender').value;
+      const dob = document.getElementById('dob').value;
+      const epic = document.getElementById('epic').value;
+      const serial = document.getElementById('serial').value;
+      const constituency = document.getElementById('constituency').value;
+      const part = document.getElementById('part').value;
+      const polling = document.getElementById('polling').value;
+
+      ctx.font = "bold 22px Arial";
+      ctx.fillStyle = "#000";
+      ctx.fillText(epic, 160, 130);
+
+      ctx.font = "18px Arial";
+      ctx.fillText(name, 160, 180);
+      ctx.fillText(fhName, 160, 215);
+      ctx.fillText(gender, 160, 250);
+      ctx.fillText(dob, 160, 285);
+
+      ctx.fillText(epic, 545, 445);
+      ctx.fillText(serial, 700, 470);
+      ctx.fillText(constituency, 700, 500);
+      ctx.fillText(part, 700, 530);
+      ctx.fillText(polling, 700, 590);
+
+      if (uploadedPhoto) {
+        ctx.drawImage(uploadedPhoto, 60, 130, 80, 100);   // main photo
+        ctx.drawImage(uploadedPhoto, 545, 460, 40, 50);   // small photo
+      }
+    }
+
+    function generateCard() {
+      if (!uploadedPhoto) {
+        alert("Please upload a photo.");
+        return;
+      }
+      drawTemplate();
+    }
+
+    function downloadPDF() {
+      drawTemplate();
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('l', 'px', [canvas.width, canvas.height]);
+      pdf.addImage(canvas.toDataURL('image/jpeg'), 'JPEG', 0, 0, canvas.width, canvas.height);
+      pdf.save("voter_id_card.pdf");
+    }
+  </script>
+</body>
+</html>
